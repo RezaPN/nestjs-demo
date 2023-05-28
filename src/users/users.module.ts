@@ -6,12 +6,26 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './users.entity';
 import { AuthService } from './auth.service';
 import { CurrentUserInterceptor } from './interceptors/current-user.interceptor';
+import { jwtConstants } from './auth.contants';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])], //this create repository by typeorm
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    JwtModule.register({
+      global: true,
+      secret: jwtConstants.secret,
+      signOptions: { expiresIn: '60s' },
+    }),
+  ],
   controllers: [UsersController],
-  providers: [UsersService, AuthService, {
-    provide: APP_INTERCEPTOR, //globally scoped interceptor
-    useClass: CurrentUserInterceptor}],
+  providers: [
+    UsersService,
+    AuthService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CurrentUserInterceptor,
+    },
+  ],
 })
 export class UsersModule {}

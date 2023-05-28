@@ -5,8 +5,10 @@ import {
   PrimaryGeneratedColumn,
   AfterUpdate,
   AfterRemove,
+  OneToMany
 } from 'typeorm';
 //all of this is decorators
+import {Contact} from '../contacts/contacts.entity'
 
 
 @Entity()
@@ -19,6 +21,9 @@ export class User {
 
   @Column()
   password: string;
+
+  @OneToMany(() => Contact,  (contact) => contact.user )
+  contacts: Contact[];
 
   @AfterInsert()
   logInsert() {

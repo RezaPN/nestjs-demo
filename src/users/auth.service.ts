@@ -1,21 +1,23 @@
 import {
   BadRequestException,
+  UnauthorizedException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './users.entity';
 import { randomBytes, scrypt as _scrypt } from 'crypto';
 
 import { promisify } from 'util';
+import { JwtService } from '@nestjs/jwt';
 
 const scrypt = promisify(_scrypt); //promise version
 
 @Injectable()
 export class AuthService {
-  constructor(private userService: UsersService) {}
+  constructor(
+    private userService: UsersService,
+    // private jwtService: JwtService,
+  ) {}
 
   async signup(email: string, password: string) {
     const users = await this.userService.find(email);
@@ -52,10 +54,17 @@ export class AuthService {
 
     const hash = (await scrypt(password, salt, 32)) as Buffer;
 
+    // const payload = { sub: user.id, email: user.email };
     if (storedHash !== hash.toString('hex')) {
-      throw new BadRequestException('bad password');
+      throw new UnauthorizedException('wrong password');
     }
 
+    //testing jwt, nanti kalo sukses balikin akses token aja
     return user;
+    // return {
+    //   id: user.id,
+    //   email: user.email,
+    //   access_token: await this.jwtService.signAsync(payload),
+    // };
   }
 }
