@@ -2,19 +2,32 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './users.entity';
+import { Contact } from 'src/contacts/contacts.entity';
+import { ContactsService } from 'src/contacts/contacts.service';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private repo: Repository<User>) {}
+  constructor(@InjectRepository(User) private repo: Repository<User>, private contactService: ContactsService) {}
 
   create(email: string, password: string) {
     const user = this.repo.create({ email, password });
     return this.repo.save(user);
   }
 
-  findOne(id: number) {
-    if (!id){
-      throw new NotFoundException('Not Found')
+  async findOneWithContact(id: number) {
+    if (!id) {
+      throw new NotFoundException('Not Found');
+    }
+    return this.repo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.contacts', 'contacts')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
+  async findOne(id: number) {
+    if (!id) {
+      throw new NotFoundException('Not Found');
     }
     return this.repo.findOne({ where: { id } });
   }
@@ -38,9 +51,9 @@ export class UsersService {
   }
 
   async remove(id: number) {
-    const user = await this.findOne(id);
+    const user = await this.findOneWithContact(id);
     if (!user) {
-      throw new NotFoundException('users not found');
+      throw new NotFoundException('User not found');
     }
     return this.repo.remove(user);
   }
