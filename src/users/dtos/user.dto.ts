@@ -1,12 +1,15 @@
 import { Expose } from 'class-transformer'
 
 export class UserDTO {
-    @Expose()
-    id: number;
+    // @Expose()
+    // id: number;
     
-    @Expose()
-    email: string;
+    // @Expose()
+    // email: string;
 
     @Expose()
     access_token: string;
+
+    @Expose()
+    refresh_token: string;
 }

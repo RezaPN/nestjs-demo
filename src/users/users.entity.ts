@@ -22,7 +22,7 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ default: true})
+  @Column({ default: false})
   admin: boolean;
 
   @OneToMany(() => Contact,  (contact) => contact.user )

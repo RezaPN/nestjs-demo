@@ -32,10 +32,14 @@ export class ContactsController {
   @UseGuards(AuthGuard)
   @Serialize(ContactFind)
   async findOrFindAllContacts(@Req() request: Request, @CurrentUser() user: User) {
+    // Extract the token from the Authorization header
+    const authHeader = request.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+  
     if (Object.keys(request.query).length > 0) {
       return this.contactService.find(request.query, user);
     } else {
-      return this.contactService.findAll(user);
+      return this.contactService.findAll(token);
     }
   }
 

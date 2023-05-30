@@ -2,16 +2,34 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Repository, Equal } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Contact } from './contacts.entity';
 import { CreateContactDto } from './dtos/create-contact.dto';
 import { User } from 'src/users/users.entity';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ContactsService {
-  constructor(@InjectRepository(Contact) private repo: Repository<Contact>) {}
+  constructor(
+    @InjectRepository(Contact) private repo: Repository<Contact>,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
+
+  async decodeJwt(jwt: string): Promise<any> {
+    try {
+      const secret = this.configService.get('SECRET_JWT');
+      const payload = await this.jwtService.verifyAsync(jwt, { secret });
+      return payload;
+    } catch (error) {
+      console.log(error);
+      throw new UnauthorizedException('Invalid token');
+    }
+  }
 
   create(contactDto: CreateContactDto, user: User) {
     const contact = this.repo.create(contactDto);
@@ -19,15 +37,17 @@ export class ContactsService {
     return this.repo.save(contact);
   }
 
-  async findAll(user: User): Promise<Contact[]> {
+  async findAll(jwt: string): Promise<Contact[]> {
     // Check if user and user.id are not null or undefined
-    if (!user || !user.id) {
-      throw new NotFoundException('Invalid user');
-    }
+
+    console.log(jwt);
+
+    const payload = await this.decodeJwt(jwt);
+    const userId = payload.sub;
 
     const allContacts = await this.repo
       .createQueryBuilder('contact')
-      .where('userId = :userId', { userId: user.id })
+      .where('userId = :userId', { userId })
       .getMany();
 
     if (allContacts.length === 0) {
@@ -62,7 +82,7 @@ export class ContactsService {
     if (!contacts || contacts.length === 0) {
       throw new NotFoundException('No contacts found for this user');
     }
-    
+
     return contacts.length === 1 ? contacts[0] : contacts;
   }
 
@@ -82,7 +102,7 @@ export class ContactsService {
   }
 
   async update(contactId: number, attrs: Partial<Contact>, user: User) {
-    const dataUser = await this.find({ id: contactId }, user) as Contact
+    const dataUser = (await this.find({ id: contactId }, user)) as Contact;
 
     if (!dataUser) {
       throw new NotFoundException('users not found');

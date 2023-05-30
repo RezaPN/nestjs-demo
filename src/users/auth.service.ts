@@ -9,6 +9,7 @@ import { randomBytes, scrypt as _scrypt } from 'crypto';
 
 import { promisify } from 'util';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 const scrypt = promisify(_scrypt); //promise version
 
@@ -16,8 +17,48 @@ const scrypt = promisify(_scrypt); //promise version
 export class AuthService {
   constructor(
     private userService: UsersService,
-    // private jwtService: JwtService,
+    private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
+
+  async generateAccessToken(user: any) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+    };
+    const signOptions = {
+      secret: this.configService.get('SECRET_JWT'),
+      expiresIn: '30m',
+    };
+  
+    return this.jwtService.signAsync(payload, signOptions);
+  }
+  
+  async generateRefreshToken(user: any) {
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      isRefreshToken: true,
+    };
+    const signOptions = {
+      secret: this.configService.get('SECRET_JWT'),
+      expiresIn: '24h',
+    };
+  
+    return this.jwtService.signAsync(payload, signOptions);
+  }
+  
+  async getTokens(user: any) {
+    const [access_token, refresh_token] = await Promise.all([
+      this.generateAccessToken(user),
+      this.generateRefreshToken(user),
+    ]);
+  
+    return {
+      access_token,
+      refresh_token,
+    };
+  }
 
   async signup(email: string, password: string) {
     const users = await this.userService.find(email);
@@ -38,8 +79,15 @@ export class AuthService {
     //create a new user and save it
     const user = await this.userService.create(email, result);
 
+    const token = await this.getTokens(user)
+
     //return the user
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      access_token: token.access_token,
+      refresh_token: token.refresh_token
+    };
   }
 
   async signin(email: string, password: string) {
@@ -60,11 +108,18 @@ export class AuthService {
     }
 
     //testing jwt, nanti kalo sukses balikin akses token aja
-    return user;
-    // return {
-    //   id: user.id,
-    //   email: user.email,
-    //   access_token: await this.jwtService.signAsync(payload),
-    // };
+    // return user;
+    const secret = this.configService.get('SECRET_JWT');
+    const payload = { sub: user.id, email: user.email };
+    const access_token = await this.jwtService.signAsync(payload, { secret });
+
+    const token = await this.getTokens(user)
+
+    return {
+      id: user.id,
+      email: user.email,
+      access_token: token.access_token,
+      refresh_token: token.refresh_token,
+    };
   }
 }
