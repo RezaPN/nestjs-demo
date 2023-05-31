@@ -11,6 +11,7 @@ import {
   Session,
   UseGuards,
   Req,
+  HttpCode,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
@@ -52,8 +53,11 @@ export class UsersController {
   }
 
   @Post('/signout')
-  signOut(@Session() session: any) {
-    session.userId = null;
+  @HttpCode(200)
+  signOut(@Req() request: Request) {
+    const token = jwtRequestExtract(request);
+
+    return this.authService.signout(token);
   }
 
   @Post('/signup')

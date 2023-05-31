@@ -8,25 +8,29 @@ import {
   Param,
   Req,
   Put,
+  HttpCode
 } from '@nestjs/common';
 import { CreateContactDto } from './dtos/create-contact.dto';
 import { ContactsService } from './contacts.service';
 import { AuthGuard } from 'src/guards/auth.guard';
-import { CurrentUser } from 'src/users/decorators/current-user.decorator';
-import { User } from 'src/users/users.entity';
 import { ContactDto } from './dtos/contact.dto';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { Request } from 'express';
 import { ContactFind } from './dtos/contact-find.dto';
 import { updateContactDto } from './dtos/update-contact.dto';
 import { jwtRequestExtract } from 'src/utlis/jwt.utils';
+import { GeneralResultDto } from './dtos/general-result.dto';
+import {
+  StatusCodes
+} from 'http-status-codes';
 
 @Controller('contacts')
+@UseGuards(AuthGuard)
 export class ContactsController {
   constructor(private contactService: ContactsService) {}
 
   @Post()
-  @UseGuards(AuthGuard) //ngejaga orangnya harus signin dulu baru bisa akses route ini
+  @HttpCode(StatusCodes.OK)
   @Serialize(ContactDto)
   createContact(@Body() body: CreateContactDto, @Req() request: Request) {
     const token = jwtRequestExtract(request);
@@ -34,15 +38,13 @@ export class ContactsController {
   }
 
   @Delete('/:id')
-  @UseGuards(AuthGuard) //ngejaga orangnya harus signin dulu baru bisa akses route ini
-  @Serialize(ContactDto)
+  @Serialize(GeneralResultDto)
   deleteContact(@Param('id') id: string,  @Req() request: Request) {
     const token = jwtRequestExtract(request);
     return this.contactService.deleteContactById(parseInt(id), token);
   }
 
   @Get()
-  @UseGuards(AuthGuard)
   @Serialize(ContactFind)
   async findOrFindAllContacts(
     @Req() request: Request,
@@ -57,7 +59,6 @@ export class ContactsController {
   }
 
   @Put('/:id')
-  @UseGuards(AuthGuard)
   @Serialize(ContactFind)
   async updateContact(
     @Param('id') id: string,

@@ -1,12 +1,19 @@
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BaseGuard } from './base.guard';
+import { Request } from 'express';
+import { User } from 'src/users/users.entity';
 
-export class AdminGuard implements CanActivate {
-  canActivate(context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest();
-    if (!request.currentUser) {
-      return false;
+interface RequestWithUser extends Request {
+  user: User; 
+}
+
+@Injectable()
+export class AdminGuard extends BaseGuard {
+  handleRequest(request: RequestWithUser): boolean {
+    // Check if payload has the admin property and it's set to true
+    if (!request.user.admin) {
+      throw new UnauthorizedException('Not enough privileges');
     }
-
-    return request.currentUser.admin;
+    return true;
   }
 }

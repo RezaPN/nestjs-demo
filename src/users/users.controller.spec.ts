@@ -29,9 +29,9 @@ describe('UsersController', () => {
     };
     fakeAuthService = {
       // signup: () => {},
-      signin: (email: string, password: string) => {
-        return Promise.resolve({ id: 1, email, password } as User);
-      },
+      // signin: (email: string, password: string) => {
+      //   return Promise.resolve({ id: 1, email, password } as User);
+      // },
     };
 
     const module: TestingModule = await Test.createTestingModule({

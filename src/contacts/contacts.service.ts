@@ -86,7 +86,7 @@ export class ContactsService {
     return contacts.length === 1 ? contacts[0] : contacts;
   }
 
-  async deleteContactById(contactId: number, token: string): Promise<void> {
+  async deleteContactById(contactId: number, token: string) {
     const payload = await this.authService.decodeJwt(token);
     const userId = payload.sub;
 
@@ -102,6 +102,11 @@ export class ContactsService {
     if (deleteResult.affected === 0) {
       throw new NotFoundException('Contact not found');
     }
+
+    return {
+      status: 200,
+      message: 'Contact deleted successfuly',
+    };
   }
 
   async update(contactId: number, attrs: Partial<Contact>, jwt: string) {

@@ -12,4 +12,13 @@ export class UserDTO {
 
     @Expose()
     refresh_token: string;
+
+    @Expose()
+    status: number;
+  
+    @Expose()
+    message: string;
+  
+    @Expose()
+    data: any;
 }

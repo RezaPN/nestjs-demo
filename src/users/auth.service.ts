@@ -13,10 +13,12 @@ import { RefreshToken } from './refreshtoken.entity';
 import { Repository } from 'typeorm';
 import { encrypt, validateEncrypt } from 'src/utlis/encrypt.utils';
 import { TokenExpiredError, decode } from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
 
 interface Payload {
   id: number;
   email: string;
+  admin: boolean;
 }
 
 @Injectable()
@@ -26,6 +28,7 @@ export class AuthService {
     private refreshTokenRepository: Repository<RefreshToken>,
     private userService: UsersService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async setRefreshToken(refreshToken: string, userId: number) {
@@ -43,7 +46,10 @@ export class AuthService {
     const payload = {
       sub: user.id,
       email: user.email,
+      admin: user.admin,
     };
+
+    console.log(user)
     const signOptions = {
       expiresIn: '300s', //5 menit
     };
@@ -58,6 +64,7 @@ export class AuthService {
       isRefreshToken: true,
     };
     const signOptions = {
+      secret: this.configService.get('SECRET_RT'),
       expiresIn: '24h',
     };
 
@@ -118,7 +125,7 @@ export class AuthService {
 
     await this.validateUserToken(payload, refreshToken);
 
-    return this.getTokens({ id: parseInt(payload.sub), email: payload.email });
+    return this.getTokens({ id: parseInt(payload.sub), email: payload.email, admin: payload.admin});
   }
 
   async decodeJwt(jwt: string): Promise<any> {
@@ -177,4 +184,26 @@ export class AuthService {
       refresh_token: token.refresh_token,
     };
   }
+
+  async signout(token: string) {
+    const payload = await this.decodeJwt(token);
+    const userId = payload.sub;
+
+    const result = await this.refreshTokenRepository.delete({
+      userId: parseInt(userId),
+    });
+
+    if (result.affected === 0) {
+      throw new NotFoundException('No refresh tokens found for this user');
+    }
+
+    console.log('success!')
+
+    return {
+      status: 200,
+      message: 'Sign out successful. You have been logged out of your account.',
+      data: null,
+    };
+  }
+
 }
