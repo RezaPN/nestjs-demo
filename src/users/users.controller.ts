@@ -10,6 +10,7 @@ import {
   NotFoundException,
   Session,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
@@ -21,6 +22,8 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from './users.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
+import { jwtRequestExtract } from 'src/utlis/jwt.utils';
+import { Request } from 'express';
 
 @Controller('auth')
 @Serialize(UserDTO)
@@ -39,6 +42,13 @@ export class UsersController {
   @UseGuards(AuthGuard)
   whoAmI(@CurrentUser() user: User) {
     return user;
+  }
+
+  @Post('/refreshToken')
+  refreshToken(@Req() request: Request) {
+    const token = jwtRequestExtract(request);
+    console.log(token);
+    return this.authService.getNewJwtToken(token);
   }
 
   @Post('/signout')

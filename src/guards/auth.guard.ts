@@ -6,7 +6,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { TokenExpiredError, decode } from 'jsonwebtoken';
 
+//source: https://docs.nestjs.com/security/authentication
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -28,8 +30,13 @@ export class AuthGuard implements CanActivate {
       // 💡 We're assigning the payload to the request object here
       // so that we can access it in our route handlers
       request['user'] = payload;
-    } catch {
-      throw new UnauthorizedException();
+    } catch (error) {
+      if (error instanceof TokenExpiredError){
+        throw new UnauthorizedException('token is expired');
+      }else{
+        throw new UnauthorizedException('token is invalid')
+      }
+      
     }
 
     return true;

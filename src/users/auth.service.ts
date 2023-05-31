@@ -5,59 +5,133 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { randomBytes, scrypt as _scrypt } from 'crypto';
+import { scrypt as _scrypt } from 'crypto';
 
-import { promisify } from 'util';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { RefreshToken } from './refreshtoken.entity';
+import { Repository } from 'typeorm';
+import { encrypt, validateEncrypt } from 'src/utlis/encrypt.utils';
+import { TokenExpiredError, decode } from 'jsonwebtoken';
 
-const scrypt = promisify(_scrypt); //promise version
+interface Payload {
+  id: number;
+  email: string;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(RefreshToken)
+    private refreshTokenRepository: Repository<RefreshToken>,
     private userService: UsersService,
     private jwtService: JwtService,
-    private configService: ConfigService,
   ) {}
 
-  async generateAccessToken(user: any) {
+  async setRefreshToken(refreshToken: string, userId: number) {
+    const currentHashedRefreshToken = await encrypt({ nonHash: refreshToken });
+
+    const newRefreshToken = this.refreshTokenRepository.create({
+      token: currentHashedRefreshToken,
+      userId: userId,
+    });
+
+    await this.refreshTokenRepository.save(newRefreshToken);
+  }
+
+  async generateAccessToken(user: Payload) {
     const payload = {
       sub: user.id,
       email: user.email,
     };
     const signOptions = {
-      secret: this.configService.get('SECRET_JWT'),
-      expiresIn: '30m',
+      expiresIn: '300s', //5 menit
     };
-  
+
     return this.jwtService.signAsync(payload, signOptions);
   }
-  
-  async generateRefreshToken(user: any) {
+
+  async generateRefreshToken(user: Payload) {
     const payload = {
       sub: user.id,
       email: user.email,
       isRefreshToken: true,
     };
     const signOptions = {
-      secret: this.configService.get('SECRET_JWT'),
       expiresIn: '24h',
     };
-  
-    return this.jwtService.signAsync(payload, signOptions);
+
+    const refreshToken = await this.jwtService.signAsync(payload, signOptions);
+
+    const existingToken = await this.refreshTokenRepository.findOne({
+      where: { userId: user.id },
+    });
+    if (existingToken) {
+      await this.refreshTokenRepository.remove(existingToken);
+    }
+
+    this.setRefreshToken(refreshToken, user.id);
+
+    return refreshToken;
   }
-  
-  async getTokens(user: any) {
+
+  async getTokens(user: Payload) {
     const [access_token, refresh_token] = await Promise.all([
       this.generateAccessToken(user),
       this.generateRefreshToken(user),
     ]);
-  
+
     return {
       access_token,
       refresh_token,
     };
+  }
+
+  async validateUserToken(payload: any, refreshToken: string) {
+    if (payload === null || typeof payload === 'string') {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const hashedRefreshToken = await this.refreshTokenRepository.findOne({
+      where: { userId: parseInt(payload.sub) },
+    });
+
+    const validate = validateEncrypt(hashedRefreshToken.token, refreshToken);
+
+    if (!validate) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    return true;
+  }
+
+  async getNewJwtToken(refreshToken: string) {
+    const payload = decode(refreshToken);
+
+    if (
+      payload === null ||
+      typeof payload === 'string' ||
+      !payload.isRefreshToken
+    ) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    await this.validateUserToken(payload, refreshToken);
+
+    return this.getTokens({ id: parseInt(payload.sub), email: payload.email });
+  }
+
+  async decodeJwt(jwt: string): Promise<any> {
+    try {
+      const payload = await this.jwtService.verifyAsync(jwt);
+      return payload;
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        throw new UnauthorizedException('Token is Expired');
+      } else {
+        throw new UnauthorizedException('Invalid token');
+      }
+    }
   }
 
   async signup(email: string, password: string) {
@@ -66,27 +140,20 @@ export class AuthService {
       throw new BadRequestException('Email in Use');
     }
 
-    //hash the users password
-    //generate a salt
-    const salt = randomBytes(8).toString('hex'); //1bytes equal 2 char
-
-    //hash the salt and the password together
-    const hash = (await scrypt(password, salt, 32)) as Buffer;
-
     //join the hashed result and the salt together
-    const result = salt + '.' + hash.toString('hex');
+    const result = await encrypt({ nonHash: password });
 
     //create a new user and save it
     const user = await this.userService.create(email, result);
 
-    const token = await this.getTokens(user)
+    const token = await this.getTokens(user);
 
     //return the user
     return {
       id: user.id,
       email: user.email,
       access_token: token.access_token,
-      refresh_token: token.refresh_token
+      refresh_token: token.refresh_token,
     };
   }
 
@@ -95,25 +162,13 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException('Email not found');
     }
+    const validate = validateEncrypt(user.password, password);
 
-    //salt.hash
-
-    const [salt, storedHash] = user.password.split('.');
-
-    const hash = (await scrypt(password, salt, 32)) as Buffer;
-
-    // const payload = { sub: user.id, email: user.email };
-    if (storedHash !== hash.toString('hex')) {
+    if (!validate) {
       throw new UnauthorizedException('wrong password');
     }
 
-    //testing jwt, nanti kalo sukses balikin akses token aja
-    // return user;
-    const secret = this.configService.get('SECRET_JWT');
-    const payload = { sub: user.id, email: user.email };
-    const access_token = await this.jwtService.signAsync(payload, { secret });
-
-    const token = await this.getTokens(user)
+    const token = await this.getTokens(user);
 
     return {
       id: user.id,
