@@ -39,8 +39,6 @@ export class ContactsService {
     const payload = await this.authService.decodeJwt(token);
     const userId = parseInt(payload.sub);
 
-    console.log(payload.sub)
-
     const allContacts = await this.repo
       .createQueryBuilder('contact')
       .leftJoinAndSelect('contact.user', 'user')

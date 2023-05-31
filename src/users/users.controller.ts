@@ -19,8 +19,6 @@ import { UsersService } from './users.service';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { UserDTO } from './dtos/user.dto';
 import { AuthService } from './auth.service';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { User } from './users.entity';
 import { AuthGuard } from '../guards/auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
 import { jwtRequestExtract } from 'src/utlis/jwt.utils';
@@ -34,21 +32,9 @@ export class UsersController {
     private authService: AuthService,
   ) {}
 
-  // @Get('/whoami')
-  // whoAmI(@Session() session: any){
-  //   return this.usersService.findOne(session.userId)
-  // }
-
-  @Get('/whoami')
-  @UseGuards(AuthGuard)
-  whoAmI(@CurrentUser() user: User) {
-    return user;
-  }
-
   @Post('/refreshToken')
   refreshToken(@Req() request: Request) {
     const token = jwtRequestExtract(request);
-    console.log(token);
     return this.authService.getNewJwtToken(token);
   }
 
@@ -75,6 +61,7 @@ export class UsersController {
   }
 
   @Get('/:id')
+  @UseGuards(AuthGuard)
   async findUser(@Param('id') id: string) {
     const user = await this.usersService.findOne(parseInt(id));
 
@@ -85,6 +72,7 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   findAllUsers(@Query('email') email: string) {
     return this.usersService.find(email);
   }

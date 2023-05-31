@@ -49,7 +49,6 @@ export class AuthService {
       admin: user.admin,
     };
 
-    console.log(user)
     const signOptions = {
       expiresIn: '300s', //5 menit
     };
@@ -197,7 +196,6 @@ export class AuthService {
       throw new NotFoundException('No refresh tokens found for this user');
     }
 
-    console.log('success!')
 
     return {
       status: 200,

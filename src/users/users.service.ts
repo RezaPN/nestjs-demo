@@ -33,7 +33,6 @@ export class UsersService {
   }
 
   find(email: string) {
-    console.log(email);
     return this.repo.find({ where: { email } });
   }
 
