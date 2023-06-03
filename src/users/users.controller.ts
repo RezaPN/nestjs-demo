@@ -48,13 +48,14 @@ export class UsersController {
   @Post('/signup')
   async createUser(@Body() body: CreateUserDto) {
     const user = await this.authService.signup(body.email, body.password);
-    return user;
+    return {message: 'Pendaftaran Berhasil', result: user};
   }
 
   @Post('/signin')
   async signin(@Body() body: CreateUserDto) {
     const user = await this.authService.signin(body.email, body.password);
-    return user;
+
+    return {message: 'Login Berhasil', result: user};
   }
 
   @Get('/:id')

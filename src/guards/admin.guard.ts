@@ -10,7 +10,6 @@ interface RequestWithUser extends Request {
 @Injectable()
 export class AdminGuard extends BaseGuard {
   handleRequest(request: RequestWithUser): boolean {
-    // Check if payload has the admin property and it's set to true
     if (!request.user.admin) {
       throw new UnauthorizedException('Not enough privileges');
     }

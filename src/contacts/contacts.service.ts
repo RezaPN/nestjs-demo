@@ -2,15 +2,11 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
-import { Repository, Equal } from 'typeorm';
+import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Contact } from './contacts.entity';
 import { CreateContactDto } from './dtos/create-contact.dto';
-import { User } from 'src/users/users.entity';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from 'src/users/auth.service';
 

@@ -41,7 +41,6 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
           rejectUnauthorized: JSON.parse(this.configService.get<string>('SSL')),
         },
       }
-      console.log(obj);
       return obj;
     }
   }

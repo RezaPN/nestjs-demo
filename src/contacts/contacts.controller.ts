@@ -24,9 +24,12 @@ import {
   StatusCodes
 } from 'http-status-codes';
 
+import { Logger } from '@nestjs/common';
+
 @Controller('contacts')
 @UseGuards(AuthGuard)
 export class ContactsController {
+  private logger = new Logger('TasksController');
   constructor(private contactService: ContactsService) {}
 
   @Post()
@@ -34,6 +37,7 @@ export class ContactsController {
   @Serialize(ContactDto)
   createContact(@Body() body: CreateContactDto, @Req() request: Request) {
     const token = jwtRequestExtract(request);
+    this.logger.verbose(`Body form of create contact: ${JSON.stringify(body)}`)
     return this.contactService.create(body, token);
   }
 
