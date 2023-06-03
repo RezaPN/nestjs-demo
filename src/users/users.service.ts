@@ -25,19 +25,19 @@ export class UsersService {
       .getOne();
   }
 
-  async findOne(id: number) {
+  async findOneUser(id: number) {
     if (!id) {
       throw new NotFoundException('Not Found');
     }
     return this.repo.findOne({ where: { id } });
   }
 
-  find(email: string) {
+  findUser(email: string) {
     return this.repo.find({ where: { email } });
   }
 
   async update(id: number, attrs: Partial<User>) {
-    const user = await this.findOne(id);
+    const user = await this.findOneUser(id);
     if (!user) {
       throw new NotFoundException('users not found');
     }

@@ -58,7 +58,7 @@ export class UsersController {
   @Get('/:id')
   @UseGuards(AuthGuard)
   async findUser(@Param('id') id: string) {
-    const user = await this.usersService.findOne(parseInt(id));
+    const user = await this.usersService.findOneUser(parseInt(id));
 
     if (!user) {
       throw new NotFoundException('user not found');
@@ -69,7 +69,7 @@ export class UsersController {
   @Get()
   @UseGuards(AuthGuard)
   findAllUsers(@Query('email') email: string) {
-    return this.usersService.find(email);
+    return this.usersService.findUser(email);
   }
 
   @Delete('/:id')

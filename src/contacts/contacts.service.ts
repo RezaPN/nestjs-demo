@@ -23,13 +23,13 @@ export class ContactsService {
     const payload = await this.authService.decodeJwt(jwt);
     const userId = payload.sub;
 
-    const user = await this.userService.findOne(userId);
+    const user = await this.userService.findOneUser(userId);
 
     contact.user = user;
     return this.repo.save(contact);
   }
 
-  async findAll(token: string): Promise<Contact[]> {
+  async findAllContact(token: string): Promise<Contact[]> {
     // Check if user and user.id are not null or undefined
 
     const payload = await this.authService.decodeJwt(token);
@@ -47,7 +47,7 @@ export class ContactsService {
     return allContacts;
   }
 
-  async find(query: any, token: string): Promise<Contact[] | Contact> {
+  async findContact(query: any, token: string): Promise<Contact[] | Contact> {
     //buat cegah query yang aneh2
     const allowedFields = ['id', 'accountNumber', 'bankName', 'contactName'];
 
@@ -104,7 +104,7 @@ export class ContactsService {
   }
 
   async update(contactId: number, attrs: Partial<Contact>, jwt: string) {
-    const dataUser = (await this.find({ id: contactId }, jwt)) as Contact;
+    const dataUser = (await this.findContact({ id: contactId }, jwt)) as Contact;
 
     if (!dataUser) {
       throw new NotFoundException('users not found');

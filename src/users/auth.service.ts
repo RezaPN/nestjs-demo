@@ -140,7 +140,7 @@ export class AuthService {
   }
 
   async signup(email: string, password: string) {
-    const users = await this.userService.find(email);
+    const users = await this.userService.findUser(email);
     if (users.length) {
       throw new BadRequestException('Email in Use');
     }
@@ -163,7 +163,7 @@ export class AuthService {
   }
 
   async signin(email: string, password: string) {
-    const [user] = await this.userService.find(email);
+    const [user] = await this.userService.findUser(email);
     if (!user) {
       throw new NotFoundException('Email not found');
     }

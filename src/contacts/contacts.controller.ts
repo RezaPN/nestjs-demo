@@ -52,9 +52,9 @@ export class ContactsController {
   ) {
 
     if (Object.keys(request.query).length > 0) {
-      return this.contactService.find(request.query,  jwtRequestExtract(request));
+      return this.contactService.findContact(request.query,  jwtRequestExtract(request));
     } else {
-      return this.contactService.findAll(jwtRequestExtract(request));
+      return this.contactService.findAllContact(jwtRequestExtract(request));
     }
   }
 
