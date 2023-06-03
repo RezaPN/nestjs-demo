@@ -36,16 +36,13 @@ export class ContactsController {
   @HttpCode(StatusCodes.OK)
   @Serialize(ContactDto)
   createContact(@Body() body: CreateContactDto, @Req() request: Request) {
-    const token = jwtRequestExtract(request);
-    this.logger.verbose(`Body form of create contact: ${JSON.stringify(body)}`)
-    return this.contactService.create(body, token);
+    return this.contactService.create(body,  jwtRequestExtract(request));
   }
 
   @Delete('/:id')
   @Serialize(GeneralResultDto)
   deleteContact(@Param('id') id: string,  @Req() request: Request) {
-    const token = jwtRequestExtract(request);
-    return this.contactService.deleteContactById(parseInt(id), token);
+    return this.contactService.deleteContactById(parseInt(id), jwtRequestExtract(request));
   }
 
   @Get()
@@ -53,12 +50,11 @@ export class ContactsController {
   async findOrFindAllContacts(
     @Req() request: Request,
   ) {
-    const token = jwtRequestExtract(request);
 
     if (Object.keys(request.query).length > 0) {
-      return this.contactService.find(request.query, token);
+      return this.contactService.find(request.query,  jwtRequestExtract(request));
     } else {
-      return this.contactService.findAll(token);
+      return this.contactService.findAll(jwtRequestExtract(request));
     }
   }
 
@@ -69,7 +65,6 @@ export class ContactsController {
     @Body() body: updateContactDto,
     @Req() request: Request,
   ) {
-    const token = jwtRequestExtract(request);
-    return this.contactService.update(parseInt(id), body, token);
+    return this.contactService.update(parseInt(id), body, jwtRequestExtract(request));
   }
 }

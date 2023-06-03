@@ -33,16 +33,13 @@ export class UsersController {
 
   @Post('/refreshToken')
   refreshToken(@Req() request: Request) {
-    const token = jwtRequestExtract(request);
-    return this.authService.getNewJwtToken(token);
+    return this.authService.getNewJwtToken(jwtRequestExtract(request));
   }
 
   @Post('/signout')
   @HttpCode(200)
   signOut(@Req() request: Request) {
-    const token = jwtRequestExtract(request);
-
-    return this.authService.signout(token);
+    return this.authService.signout(jwtRequestExtract(request));
   }
 
   @Post('/signup')

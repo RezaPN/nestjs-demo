@@ -59,7 +59,6 @@ export class AuthService {
   async generateRefreshToken(user: Payload) {
     const payload = {
       sub: user.id,
-      email: user.email,
       isRefreshToken: true,
     };
     const signOptions = {

@@ -35,11 +35,10 @@ export class ContactsService {
     const payload = await this.authService.decodeJwt(token);
     const userId = parseInt(payload.sub);
 
-    const allContacts = await this.repo
-      .createQueryBuilder('contact')
-      .leftJoinAndSelect('contact.user', 'user')
-      .where('user.id = :userId', { userId: userId })
-      .getMany();
+    const allContacts = await this.repo.find({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
 
     if (allContacts.length === 0) {
       throw new NotFoundException('No contacts found for this user');
@@ -59,19 +58,20 @@ export class ContactsService {
     if (Object.keys(query).length > allowedFields.length) {
       throw new BadRequestException('Too many query parameters');
     }
-    let qb = this.repo
-      .createQueryBuilder('contact')
-      .leftJoinAndSelect('contact.user', 'user')
-      .where('user.id = :userId', { userId: userId });
 
-    // Looping query object untuk nambahin kondisi andWhere
+    let whereClause: any = { user: { id: userId } };
+
+    //tambahin sesuai query yang ada
     Object.keys(query).forEach((key) => {
       if (allowedFields.includes(key)) {
-        qb = qb.andWhere(`contact.${key} = :${key}`, { [key]: query[key] });
+        whereClause[key] = query[key];
       }
     });
 
-    const contacts = await qb.getMany();
+    const contacts = await this.repo.find({
+      where: whereClause,
+      relations: ['user'],
+    });
 
     if (!contacts || contacts.length === 0) {
       throw new NotFoundException('No contacts found for this user');
@@ -109,6 +109,8 @@ export class ContactsService {
     if (!dataUser) {
       throw new NotFoundException('users not found');
     }
+
+    console.log(attrs);
 
     Object.assign(dataUser, attrs);
     return this.repo.save(dataUser);
