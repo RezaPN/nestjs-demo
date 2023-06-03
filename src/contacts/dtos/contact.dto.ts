@@ -10,6 +10,8 @@ export class ContactDto {
   bankName: string;
   @Expose()
   contactName: string;
+  @Expose()
+  contact_id: string;
 
   @Transform(({obj}) => obj.user.id ) //ambil entity contact, cek properti user, dan liat user idnya dan assign di user id
   @Expose()

@@ -98,8 +98,7 @@ export class ContactsService {
     }
 
     return {
-      status: 200,
-      message: 'Contact deleted successfuly',
+      contact_id: contactId
     };
   }
 
@@ -109,8 +108,6 @@ export class ContactsService {
     if (!dataUser) {
       throw new NotFoundException('users not found');
     }
-
-    console.log(attrs);
 
     Object.assign(dataUser, attrs);
     return this.repo.save(dataUser);

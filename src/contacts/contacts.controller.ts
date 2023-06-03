@@ -35,14 +35,16 @@ export class ContactsController {
   @Post()
   @HttpCode(StatusCodes.OK)
   @Serialize(ContactDto)
-  createContact(@Body() body: CreateContactDto, @Req() request: Request) {
-    return this.contactService.create(body,  jwtRequestExtract(request));
+  async createContact(@Body() body: CreateContactDto, @Req() request: Request) {
+    const contact = await this.contactService.create(body,  jwtRequestExtract(request))
+    return {message: 'Pendaftaran Contact Berhasil', result: contact};
   }
 
   @Delete('/:id')
   @Serialize(GeneralResultDto)
-  deleteContact(@Param('id') id: string,  @Req() request: Request) {
-    return this.contactService.deleteContactById(parseInt(id), jwtRequestExtract(request));
+  async deleteContact(@Param('id') id: string,  @Req() request: Request) {
+    const result = await this.contactService.deleteContactById(parseInt(id), jwtRequestExtract(request))
+    return {message: `Contact berhasil dihapus`, data: result};
   }
 
   @Get()
