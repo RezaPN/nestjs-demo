@@ -24,7 +24,7 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Project Nest JS dengan fitur crud sederhana, memungkinkan pengguna untuk menyimpan daftar kontak dalam database. Terdapat endpoint untuk mendaftarkan pengguna baru, autentikasi pengguna, membuat, membaca, memperbarui, dan menghapus kontak. Kontak memiliki atribut seperti nomor rekening, nama bank, dan nama kontak. Endpoint ini dibangun menggunakan NestJS dan PostgreSQL.
 
 ## Installation
 
