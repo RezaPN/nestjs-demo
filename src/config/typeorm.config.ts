@@ -10,7 +10,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
     if (process.env.NODE_ENV === 'development') {
       return {
         type: this.configService.get<any>('DB_TYPE'),
-        synchronize: false,
+        synchronize: JSON.parse(this.configService.get<string>('SYNCHRONIZE')),
         port: this.configService.get<number>('DB_PORT'),
         username: this.configService.get<string>('DB_USERNAME'),
         password: this.configService.get<string>('DB_PASSWORD'),
