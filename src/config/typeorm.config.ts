@@ -14,7 +14,7 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         port: this.configService.get<number>('DB_PORT'),
         username: this.configService.get<string>('DB_USERNAME'),
         password: this.configService.get<string>('DB_PASSWORD'),
-        database: "mydatabase",
+        database: this.configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
       }
     }
