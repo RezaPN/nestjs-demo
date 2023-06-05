@@ -8,7 +8,7 @@ import {
   Param,
   Req,
   Put,
-  HttpCode
+  HttpCode,
 } from '@nestjs/common';
 import { CreateContactDto } from './dtos/create-contact.dto';
 import { ContactsService } from './contacts.service';
@@ -18,13 +18,14 @@ import { Serialize } from '../interceptors/serialize.interceptor';
 import { Request } from 'express';
 import { ContactFind } from './dtos/contact-find.dto';
 import { updateContactDto } from './dtos/update-contact.dto';
-import { jwtRequestExtract } from 'src/utlis/jwt.utils';
 import { GeneralResultDto } from './dtos/general-result.dto';
-import {
-  StatusCodes
-} from 'http-status-codes';
-
+import { StatusCodes } from 'http-status-codes';
 import { Logger } from '@nestjs/common';
+import { Payload } from 'src/type/payload.type';
+
+interface RequestWithUser extends Request {
+  user: Payload;
+}
 
 @Controller('contacts')
 @UseGuards(AuthGuard)
@@ -35,24 +36,26 @@ export class ContactsController {
   @Post()
   @HttpCode(StatusCodes.OK)
   @Serialize(ContactDto)
-  async createContact(@Body() body: CreateContactDto, @Req() request: Request) {
-    const contact = await this.contactService.create(body,  jwtRequestExtract(request))
-    return {message: 'Pendaftaran Contact Berhasil', result: contact};
+  async createContact(@Body() body: CreateContactDto, @Req() request: RequestWithUser) {
+    this.logger.log(body);
+    const contact = await this.contactService.create(body, request.user);
+    return { message: 'Pendaftaran Contact Berhasil', result: contact };
   }
 
   @Delete('/:id')
   @Serialize(GeneralResultDto)
-  async deleteContact(@Param('id') id: string,  @Req() request: Request) {
-    const result = await this.contactService.deleteContactById(parseInt(id), jwtRequestExtract(request))
-    return {message: `Contact berhasil dihapus`, data: result};
+  async deleteContact(@Param('id') id: string, @Req() request: RequestWithUser) {
+    const result = await this.contactService.deleteContactById(
+      parseInt(id),
+      request.user,
+    );
+    return { message: `Contact berhasil dihapus`, data: result };
   }
 
   @Get()
   @Serialize(ContactFind)
-  async findOrFindAllContacts(
-    @Req() request: Request,
-  ) {
-    return this.contactService.findContact(jwtRequestExtract(request), request.query);
+  async findOrFindAllContacts(@Req() request: RequestWithUser) {
+    return this.contactService.findContact(request.user, request.query);
   }
 
   @Put('/:id')
@@ -60,8 +63,12 @@ export class ContactsController {
   async updateContact(
     @Param('id') id: string,
     @Body() body: updateContactDto,
-    @Req() request: Request,
+    @Req() request: RequestWithUser,
   ) {
-    return this.contactService.update(parseInt(id), body, jwtRequestExtract(request));
+    return this.contactService.update(
+      parseInt(id),
+      body,
+      request.user,
+    );
   }
 }

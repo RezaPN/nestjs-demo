@@ -8,19 +8,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Contact } from './contacts.entity';
 import { CreateContactDto } from './dtos/create-contact.dto';
 import { UsersService } from 'src/users/users.service';
-import { AuthService } from 'src/users/auth.service';
+import { Payload } from 'src/type/payload.type';
+
 
 @Injectable()
 export class ContactsService {
   constructor(
     @InjectRepository(Contact) private repo: Repository<Contact>,
     private userService: UsersService,
-    private authService: AuthService,
   ) {}
 
-  async create(contactDto: CreateContactDto, jwt: string) {
+  async create(contactDto: CreateContactDto, payload: Payload) {
     const contact = this.repo.create(contactDto);
-    const payload = await this.authService.decodeJwt(jwt);
     const userId = payload.sub;
 
     const user = await this.userService.findOneUser(userId);
@@ -29,20 +28,19 @@ export class ContactsService {
     return this.repo.save(contact);
   }
 
-  async findContact(token: string, query?: any): Promise<Contact[] | Contact> {
+  async findContact(payload: Payload, query?: any): Promise<Contact[] | Contact> {
     //buat cegah query yang aneh2
     const allowedFields = ['id', 'accountNumber', 'bankName', 'contactName'];
 
-    const payload = await this.authService.decodeJwt(token);
     const userId = payload.sub;
 
     let whereClause: any = { user: { id: userId } };
 
     if (query) {
-    //kalo load quaries kebanyakan lempar bad request exception
-    if (Object.keys(query).length > allowedFields.length) {
-      throw new BadRequestException('Too many query parameters');
-    }
+      //kalo load quaries kebanyakan lempar bad request exception
+      if (Object.keys(query).length > allowedFields.length) {
+        throw new BadRequestException('Too many query parameters');
+      }
 
       // tambah where clause jika query tersedia
       Object.keys(query).forEach((key) => {
@@ -52,11 +50,10 @@ export class ContactsService {
       });
     }
 
-    return this.repo.find({where: whereClause});
+    return this.repo.find({ where: whereClause });
   }
 
-  async deleteContactById(contactId: number, token: string) {
-    const payload = await this.authService.decodeJwt(token);
+  async deleteContactById(contactId: number, payload: Payload) {
     const userId = payload.sub;
 
     const deleteResult = await this.repo
@@ -73,12 +70,14 @@ export class ContactsService {
     }
 
     return {
-      contact_id: contactId
+      contact_id: contactId,
     };
   }
 
-  async update(contactId: number, attrs: Partial<Contact>, token: string) {
-    const dataUser = (await this.findContact(token, { id: contactId })) as Contact;
+  async update(contactId: number, attrs: Partial<Contact>, payload: Payload) {
+    const dataUser = (await this.findContact(payload, {
+      id: contactId,
+    })) as Contact;
 
     if (!dataUser) {
       throw new NotFoundException('users not found');

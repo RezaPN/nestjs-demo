@@ -15,7 +15,7 @@ import { encrypt, validateEncrypt } from 'src/utlis/encrypt.utils';
 import { TokenExpiredError, decode } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 
-interface Payload {
+interface UserData {
   id: number;
   email: string;
   admin: boolean;
@@ -42,7 +42,7 @@ export class AuthService {
     await this.refreshTokenRepository.save(newRefreshToken);
   }
 
-  async generateAccessToken(user: Payload) {
+  async generateAccessToken(user: UserData) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -56,7 +56,7 @@ export class AuthService {
     return this.jwtService.signAsync(payload, signOptions);
   }
 
-  async generateRefreshToken(user: Payload) {
+  async generateRefreshToken(user: UserData) {
     const payload = {
       sub: user.id,
       isRefreshToken: true,
@@ -80,7 +80,7 @@ export class AuthService {
     return refreshToken;
   }
 
-  async getTokens(user: Payload) {
+  async getTokens(user: UserData) {
     const [access_token, refresh_token] = await Promise.all([
       this.generateAccessToken(user),
       this.generateRefreshToken(user),
