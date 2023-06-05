@@ -14,6 +14,8 @@ import { Repository } from 'typeorm';
 import { encrypt, validateEncrypt } from 'src/utlis/encrypt.utils';
 import { TokenExpiredError, decode } from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface UserData {
   id: number;
@@ -57,16 +59,17 @@ export class AuthService {
   }
 
   async generateRefreshToken(user: UserData) {
+    const privateKey = fs.readFileSync(path.join(__dirname, '../../private_key.pem'), 'utf8');
+
     const payload = {
       sub: user.id,
       isRefreshToken: true,
     };
     const signOptions = {
-      secret: this.configService.get('SECRET_RT'),
       expiresIn: '24h',
     };
 
-    const refreshToken = await this.jwtService.signAsync(payload, signOptions);
+    const refreshToken = await this.jwtService.signAsync(payload, { ...signOptions, secret: privateKey });
 
     const existingToken = await this.refreshTokenRepository.findOne({
       where: { userId: user.id },
@@ -78,7 +81,7 @@ export class AuthService {
     this.setRefreshToken(refreshToken, user.id);
 
     return refreshToken;
-  }
+}
 
   async getTokens(user: UserData) {
     const [access_token, refresh_token] = await Promise.all([
@@ -123,7 +126,11 @@ export class AuthService {
 
     await this.validateUserToken(payload, refreshToken);
 
-    return this.getTokens({ id: parseInt(payload.sub), email: payload.email, admin: payload.admin});
+    return this.getTokens({
+      id: parseInt(payload.sub),
+      email: payload.email,
+      admin: payload.admin,
+    });
   }
 
   async decodeJwt(jwt: string): Promise<any> {
@@ -195,12 +202,10 @@ export class AuthService {
       throw new NotFoundException('No refresh tokens found for this user');
     }
 
-
     return {
       status: 200,
       message: 'Sign out successful. You have been logged out of your account.',
       data: null,
     };
   }
-
 }

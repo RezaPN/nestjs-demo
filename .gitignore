@@ -1,6 +1,7 @@
 .env.development
 .env.test
 .env.prod
+private_key.pem
 
 
 # compiled output

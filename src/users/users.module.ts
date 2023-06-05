@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { RefreshToken } from './refreshtoken.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Module({
   imports: [
@@ -14,10 +16,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const secret = configService.get('SECRET_JWT');
+        // const secret = configService.get('SECRET_JWT');
         return {
-          secret: secret,
-          signOptions: { expiresIn: '900s' },
+          privateKey: fs.readFileSync(
+            path.resolve(__dirname, '../../private_key.pem'),
+            'utf8',
+          ),
+          publicKey: fs.readFileSync(path.resolve(__dirname, '../../public_key.pem'), 'utf8'),
+          signOptions: { algorithm: 'RS256' },
         };
       },
       inject: [ConfigService],
@@ -27,5 +33,4 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
   providers: [UsersService, AuthService],
   exports: [UsersService, AuthService],
 })
-export class UsersModule {
-}
+export class UsersModule {}
