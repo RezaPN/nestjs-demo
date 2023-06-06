@@ -31,10 +31,7 @@ export abstract class BaseGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const publicKey = await fs.readFileSync(
-      path.resolve(__dirname, '../../public_key.pem'),
-      'utf8',
-    );
+    const publicKey = this.configService.get('AUTH_JWTPUBLICKEY')
 
     try {
       const payload = await this.jwtService.verifyAsync(token, {

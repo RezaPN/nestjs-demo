@@ -59,7 +59,6 @@ export class AuthService {
   }
 
   async generateRefreshToken(user: UserData) {
-    const privateKey = fs.readFileSync(path.join(__dirname, '../../private_key.pem'), 'utf8');
 
     const payload = {
       sub: user.id,
@@ -69,7 +68,7 @@ export class AuthService {
       expiresIn: '24h',
     };
 
-    const refreshToken = await this.jwtService.signAsync(payload, { ...signOptions, secret: privateKey });
+    const refreshToken = await this.jwtService.signAsync(payload, signOptions);
 
     const existingToken = await this.refreshTokenRepository.findOne({
       where: { userId: user.id },

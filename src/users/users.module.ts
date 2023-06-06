@@ -10,19 +10,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 
+
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        // const secret = configService.get('SECRET_JWT');
         return {
-          privateKey: fs.readFileSync(
-            path.resolve(__dirname, '../../private_key.pem'),
-            'utf8',
-          ),
-          publicKey: fs.readFileSync(path.resolve(__dirname, '../../public_key.pem'), 'utf8'),
+          privateKey: await configService.get('AUTH_JWTPRIVATEKEY'),
+          publicKey: await configService.get('AUTH_JWTPUBLICKEY'),
           signOptions: { algorithm: 'RS256' },
         };
       },
