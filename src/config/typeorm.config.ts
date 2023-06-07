@@ -6,18 +6,19 @@ import { TypeOrmOptionsFactory, TypeOrmModuleOptions } from "@nestjs/typeorm";
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
   constructor(private configService: ConfigService) { }
 
-  createTypeOrmOptions(): TypeOrmModuleOptions {
-    if (process.env.NODE_ENV === 'development') {
-      return {
-        type: this.configService.get<any>('DB_TYPE'),
-        synchronize: JSON.parse(this.configService.get<string>('SYNCHRONIZE')),
-        port: this.configService.get<number>('DB_PORT'),
-        username: this.configService.get<string>('DB_USERNAME'),
-        password: this.configService.get<string>('DB_PASSWORD'),
-        database: this.configService.get<string>('DB_NAME'),
-        autoLoadEntities: true,
+    createTypeOrmOptions(): TypeOrmModuleOptions {
+      if (process.env.NODE_ENV === 'development') {
+        return {
+          type: this.configService.get<any>('DB_TYPE'),
+          host: this.configService.get<string>('DB_HOST'),
+          synchronize: JSON.parse(this.configService.get<string>('SYNCHRONIZE')),
+          port: this.configService.get<number>('DB_PORT'),
+          username: this.configService.get<string>('DB_USERNAME'),
+          password: this.configService.get<string>('DB_PASSWORD'),
+          database: this.configService.get<string>('DB_NAME'),
+          autoLoadEntities: true,
+        }
       }
-    }
 
     else if (process.env.NODE_ENV === 'test') {
       return {
