@@ -7,10 +7,6 @@ import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { RefreshToken } from './refreshtoken.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import * as fs from 'fs';
-import * as path from 'path';
-
-
 
 @Module({
   imports: [

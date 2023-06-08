@@ -50,6 +50,11 @@ export class ContactsService {
       });
     }
 
+    // console.log(query)
+    // bankName=BCA&contactName=Febri
+    // result: { user: { id: 9 }, bankName: 'BCA', contactName: 'Febri' }
+    // console.log(whereClause)
+
     return this.repo.find({ where: whereClause });
   }
 

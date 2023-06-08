@@ -11,6 +11,7 @@ import {
   UseGuards,
   Req,
   HttpCode,
+  Headers,
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
@@ -38,8 +39,9 @@ export class UsersController {
 
   @Post('/signout')
   @HttpCode(200)
-  signOut(@Req() request: Request) {
-    return this.authService.signout(jwtRequestExtract(request));
+  signOut(@Headers('Authorization') token: string) {
+   
+    return this.authService.signout(token && token.split(' ')[1]);
   }
 
   @Post('/signup')

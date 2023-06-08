@@ -13,9 +13,6 @@ import { RefreshToken } from './refreshtoken.entity';
 import { Repository } from 'typeorm';
 import { encrypt, validateEncrypt } from 'src/utlis/encrypt.utils';
 import { TokenExpiredError, decode } from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config';
-import * as fs from 'fs';
-import * as path from 'path';
 
 interface UserData {
   id: number;
@@ -30,7 +27,6 @@ export class AuthService {
     private refreshTokenRepository: Repository<RefreshToken>,
     private userService: UsersService,
     private jwtService: JwtService,
-    private configService: ConfigService,
   ) {}
 
   async setRefreshToken(refreshToken: string, userId: number) {
@@ -146,16 +142,17 @@ export class AuthService {
   }
 
   async signup(email: string, password: string) {
+    //kalo balikannya satu pake findOne aja, boros pake find;
     const users = await this.userService.findUser(email);
     if (users.length) {
       throw new BadRequestException('Email in Use');
     }
 
     //join the hashed result and the salt together
-    const result = await encrypt({ nonHash: password });
+    const hashedPassword = await encrypt({ nonHash: password });
 
     //create a new user and save it
-    const user = await this.userService.create(email, result);
+    const user = await this.userService.create(email, hashedPassword);
 
     const token = await this.getTokens(user);
 
