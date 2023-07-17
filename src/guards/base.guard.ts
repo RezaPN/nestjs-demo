@@ -6,11 +6,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { TokenExpiredError, decode } from 'jsonwebtoken';
+import { TokenExpiredError } from 'jsonwebtoken';
 import { Request } from 'express';
-import { User } from 'src/users/users.entity';
-import * as fs from 'fs';
-import * as path from 'path';
+import { User } from '../users/users.entity';
 
 interface RequestWithUser extends Request {
   user: User;
@@ -37,6 +35,9 @@ export abstract class BaseGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         publicKey: publicKey,
       });
+
+      console.log(payload)
+
       request.user = payload;
     } catch (error) {
       if (error instanceof TokenExpiredError) {

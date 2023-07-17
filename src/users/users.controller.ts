@@ -21,7 +21,7 @@ import { UserDTO } from './dtos/user.dto';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '../guards/auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
-import { jwtRequestExtract } from 'src/utlis/jwt.utils';
+import { jwtRequestExtract } from '../utlis/jwt.utils';
 import { Request } from 'express';
 
 @Controller('auth')

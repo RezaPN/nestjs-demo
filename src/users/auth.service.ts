@@ -11,7 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshToken } from './refreshtoken.entity';
 import { Repository } from 'typeorm';
-import { encrypt, validateEncrypt } from 'src/utlis/encrypt.utils';
+import { encrypt, validateEncrypt } from '../utlis/encrypt.utils';
 import { TokenExpiredError, decode } from 'jsonwebtoken';
 
 interface UserData {

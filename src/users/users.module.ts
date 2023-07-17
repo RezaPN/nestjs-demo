@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { RefreshToken } from './refreshtoken.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AppService } from '../app.service';
+import { ProducerService } from '../kafka/producer.service';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, AuthService],
+  providers: [UsersService, AuthService, AppService, ProducerService],
   exports: [UsersService, AuthService],
 })
 export class UsersModule {}

@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { BaseGuard } from './base.guard';
 import { Request } from 'express';
-import { User } from 'src/users/users.entity';
+import { User } from '../users/users.entity';
 
 interface RequestWithUser extends Request {
   user: User;
