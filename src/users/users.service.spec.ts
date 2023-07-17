@@ -97,5 +97,72 @@ describe('UsersService', () => {
   it('should throw an error if no id is provided when finding one user with contact', async () => {
     await expect(service.findOneWithContact(undefined)).rejects.toThrow(NotFoundException);
   });
+
+  it('should update a user', async () => {
+    const id = 1;
+    const updateData = { email: 'new@example.com' };
+    const oldUser = { id, email: 'old@example.com', password: 'password' };
+    const newUser = { ...oldUser, ...updateData };
+  
+    fakeUserRepository.findOne = jest.fn().mockResolvedValue(oldUser);
+    fakeUserRepository.save = jest.fn().mockResolvedValue(newUser);
+  
+    const result = await service.update(id, updateData);
+  
+    expect(fakeUserRepository.findOne).toBeCalledWith({ where: { id } });
+    expect(fakeUserRepository.save).toBeCalledWith(newUser);
+    expect(result).toEqual(newUser);
+  });
+  
+  it('should remove a user', async () => {
+    const id = 1;
+    const user = { id, email: 'test@example.com', password: 'password' };
+  
+    mockQueryBuilder.getOne.mockResolvedValue(user);
+    fakeUserRepository.remove = jest.fn().mockResolvedValue({});
+  
+    await service.remove(id);
+  
+    expect(fakeUserRepository.createQueryBuilder).toBeCalledWith('user');
+    expect(mockQueryBuilder.leftJoinAndSelect).toBeCalledWith('user.contacts', 'contacts');
+    expect(mockQueryBuilder.where).toBeCalledWith('user.id = :id', { id });
+    expect(fakeUserRepository.remove).toBeCalledWith(user);
+  });
+  
+  it('should throw an error if no user found when removing a user', async () => {
+    const id = 1;
+  
+    mockQueryBuilder.getOne.mockResolvedValue(null);
+  
+    await expect(service.remove(id)).rejects.toThrow(NotFoundException);
+  
+    expect(fakeUserRepository.createQueryBuilder).toBeCalledWith('user');
+    expect(mockQueryBuilder.leftJoinAndSelect).toBeCalledWith('user.contacts', 'contacts');
+    expect(mockQueryBuilder.where).toBeCalledWith('user.id = :id', { id });
+  });
+  
+  
+  it('should find a user by email', async () => {
+    const email = 'test@example.com';
+    const user = { id: 1, email, password: 'this password for test' };
+  
+    fakeUserRepository.find = jest.fn().mockResolvedValue([user]);
+  
+    const result = await service.findUser(email);
+  
+    expect(fakeUserRepository.find).toBeCalledWith({ where: { email } });
+    expect(result).toEqual([user]);
+  });
+  
+  it('should return an empty array if no user is found by email', async () => {
+    const email = 'notfound@example.com';
+  
+    fakeUserRepository.find = jest.fn().mockResolvedValue([]);
+  
+    const result = await service.findUser(email);
+  
+    expect(fakeUserRepository.find).toBeCalledWith({ where: { email } });
+    expect(result).toEqual([]);
+  });
   
 });

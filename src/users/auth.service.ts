@@ -109,7 +109,7 @@ export class AuthService {
   }
 
   async getNewJwtToken(refreshToken: string) {
-    const payload = decode(refreshToken);
+    const payload = this.decodeToken(refreshToken);
 
     if (
       payload === null ||
@@ -126,6 +126,10 @@ export class AuthService {
       email: payload.email,
       admin: payload.admin,
     });
+  }
+
+  decodeToken(token: string) {
+    return decode(token);
   }
 
   async decodeJwt(jwt: string): Promise<any> {
