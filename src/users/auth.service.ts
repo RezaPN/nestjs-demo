@@ -11,9 +11,8 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshToken } from './refreshtoken.entity';
 import { Repository } from 'typeorm';
-import { encrypt, validateEncrypt } from 'src/utlis/encrypt.utils';
+import { encrypt, validateEncrypt } from '../utlis/encrypt.utils';
 import { TokenExpiredError, decode } from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config';
 
 interface UserData {
   id: number;
@@ -28,7 +27,6 @@ export class AuthService {
     private refreshTokenRepository: Repository<RefreshToken>,
     private userService: UsersService,
     private jwtService: JwtService,
-    private configService: ConfigService,
   ) {}
 
   async setRefreshToken(refreshToken: string, userId: number) {
@@ -57,12 +55,12 @@ export class AuthService {
   }
 
   async generateRefreshToken(user: UserData) {
+
     const payload = {
       sub: user.id,
       isRefreshToken: true,
     };
     const signOptions = {
-      secret: this.configService.get('SECRET_RT'),
       expiresIn: '24h',
     };
 
@@ -78,7 +76,7 @@ export class AuthService {
     this.setRefreshToken(refreshToken, user.id);
 
     return refreshToken;
-  }
+}
 
   async getTokens(user: UserData) {
     const [access_token, refresh_token] = await Promise.all([
@@ -111,7 +109,7 @@ export class AuthService {
   }
 
   async getNewJwtToken(refreshToken: string) {
-    const payload = decode(refreshToken);
+    const payload = this.decodeToken(refreshToken);
 
     if (
       payload === null ||
@@ -123,7 +121,15 @@ export class AuthService {
 
     await this.validateUserToken(payload, refreshToken);
 
-    return this.getTokens({ id: parseInt(payload.sub), email: payload.email, admin: payload.admin});
+    return this.getTokens({
+      id: parseInt(payload.sub),
+      email: payload.email,
+      admin: payload.admin,
+    });
+  }
+
+  decodeToken(token: string) {
+    return decode(token);
   }
 
   async decodeJwt(jwt: string): Promise<any> {
@@ -140,16 +146,17 @@ export class AuthService {
   }
 
   async signup(email: string, password: string) {
+    //kalo balikannya satu pake findOne aja, boros pake find;
     const users = await this.userService.findUser(email);
     if (users.length) {
       throw new BadRequestException('Email in Use');
     }
 
     //join the hashed result and the salt together
-    const result = await encrypt({ nonHash: password });
+    const hashedPassword = await encrypt({ nonHash: password });
 
     //create a new user and save it
-    const user = await this.userService.create(email, result);
+    const user = await this.userService.create(email, hashedPassword);
 
     const token = await this.getTokens(user);
 
@@ -195,12 +202,10 @@ export class AuthService {
       throw new NotFoundException('No refresh tokens found for this user');
     }
 
-
     return {
       status: 200,
       message: 'Sign out successful. You have been logged out of your account.',
       data: null,
     };
   }
-
 }

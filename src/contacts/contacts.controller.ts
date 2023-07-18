@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { CreateContactDto } from './dtos/create-contact.dto';
 import { ContactsService } from './contacts.service';
-import { AuthGuard } from 'src/guards/auth.guard';
+import { AuthGuard } from '../guards/auth.guard';
 import { ContactDto } from './dtos/contact.dto';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { Request } from 'express';
@@ -21,7 +21,7 @@ import { updateContactDto } from './dtos/update-contact.dto';
 import { GeneralResultDto } from './dtos/general-result.dto';
 import { StatusCodes } from 'http-status-codes';
 import { Logger } from '@nestjs/common';
-import { Payload } from 'src/type/payload.type';
+import { Payload } from '../type/payload.type';
 
 interface RequestWithUser extends Request {
   user: Payload;

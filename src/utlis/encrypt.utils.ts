@@ -5,17 +5,19 @@ interface EncryptProps {
   salt?: string;
 }
 
-export const encrypt = ({ nonHash, salt }: EncryptProps) => {
+export const encrypt = async ({ nonHash, salt }: EncryptProps) => {
   // If salt is not provided, generate one
   if (!salt) {
-    salt = randomBytes(8).toString('hex');
+    salt = await randomBytes(8).toString('hex');
   }
 
   // hash the salt and the password together
-  const hash = scryptSync(nonHash, salt, 32);
+  const hash = await scryptSync(nonHash, salt, 32);
+
+  const result = salt + '.' + hash.toString('hex');
 
   // join the hashed result and the salt together
-  return salt + '.' + hash.toString('hex');
+  return result;
 };
 
 export const validateEncrypt = (hashed, nonHash) => {
