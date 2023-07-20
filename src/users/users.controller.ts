@@ -23,18 +23,22 @@ import { AuthGuard } from '../guards/auth.guard';
 import { AdminGuard } from '../guards/admin.guard';
 import { jwtRequestExtract } from '../utlis/jwt.utils';
 import { Request } from 'express';
+import { findUserDto } from './dtos/find-user.dto';
 
 @Controller('auth')
-@Serialize(UserDTO)
 export class UsersController {
   constructor(
     private usersService: UsersService,
     private authService: AuthService,
   ) {}
 
+  @Serialize(UserDTO)
   @Post('/refreshToken')
-  refreshToken(@Req() request: Request) {
-    return this.authService.getNewJwtToken(jwtRequestExtract(request));
+  async refreshToken(@Req() request: Request) {
+    const result = await this.authService.getNewJwtToken(jwtRequestExtract(request));
+    console.log('line 39')
+    console.log(request)
+    return result
   }
 
   @Post('/signout')
@@ -44,19 +48,23 @@ export class UsersController {
     return this.authService.signout(token && token.split(' ')[1]);
   }
 
+  @Serialize(UserDTO)
   @Post('/signup')
   async createUser(@Body() body: CreateUserDto) {
     const user = await this.authService.signup(body.email, body.password);
     return {message: 'Pendaftaran Berhasil', result: user};
   }
 
+  @Serialize(UserDTO)
   @Post('/signin')
   async signin(@Body() body: CreateUserDto) {
     const user = await this.authService.signin(body.email, body.password);
+    console.log(user);
 
     return {message: 'Login Berhasil', result: user};
   }
 
+  @Serialize(findUserDto)
   @Get('/:id')
   @UseGuards(AuthGuard)
   async findUser(@Param('id') id: string) {
@@ -65,9 +73,13 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('user not found');
     }
-    return user;
+
+    console.log(user)
+
+    return {message: 'Pencarian berhasil!', result: user};;
   }
 
+  @Serialize(findUserDto)
   @Get()
   @UseGuards(AuthGuard)
   findAllUsers(@Query('email') email: string) {
