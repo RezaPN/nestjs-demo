@@ -10,7 +10,6 @@ import { CreateContactDto } from './dtos/create-contact.dto';
 import { UsersService } from '../users/users.service';
 import { Payload } from '../type/payload.type';
 
-
 @Injectable()
 export class ContactsService {
   constructor(
@@ -21,19 +20,21 @@ export class ContactsService {
   async create(contactDto: CreateContactDto, payload: Payload) {
     const contact = this.repo.create(contactDto);
     const userId = payload.sub;
-  
+
     const user = await this.userService.findOneUser(userId);
-  
+
     if (!user) {
       throw new Error('User not found');
     }
-  
+
     contact.user = user;
     return this.repo.save(contact);
   }
-  
 
-  async findContact(payload: Payload, query?: any): Promise<Contact[] | Contact> {
+  async findContact(
+    payload: Payload,
+    query?: any,
+  ): Promise<Contact[] | Contact> {
     //buat cegah query yang aneh2
     const allowedFields = ['id', 'accountNumber', 'bankName', 'contactName'];
 
@@ -54,11 +55,6 @@ export class ContactsService {
         }
       });
     }
-
-    // console.log(query)
-    // bankName=BCA&contactName=Febri
-    // result: { user: { id: 9 }, bankName: 'BCA', contactName: 'Febri' }
-    // console.log(whereClause)
 
     return this.repo.find({ where: whereClause });
   }
@@ -85,11 +81,13 @@ export class ContactsService {
   }
 
   async update(contactId: number, attrs: Partial<Contact>, payload: Payload) {
-    const dataUser = (await this.findContact(payload, {
+    const dataUser = await this.findContact(payload, {
       id: contactId,
-    })) as Contact;
+    }) as Contact
 
-    if (!dataUser) {
+    if (Array.isArray(dataUser) && dataUser.length === 0) {
+      throw new NotFoundException('users not found');
+    } else if (!dataUser) {
       throw new NotFoundException('users not found');
     }
 

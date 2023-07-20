@@ -3,12 +3,16 @@ import {
   OnApplicationShutdown,
   OnModuleInit,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Kafka, Producer, ProducerRecord, Consumer, ConsumerSubscribeTopics, ConsumerRunConfig} from 'kafkajs';
 
 @Injectable()
 export class ConsumerService implements OnApplicationShutdown{
+
+  constructor(private configService: ConfigService) { }
+
   private readonly kafka = new Kafka({
-    brokers: ["172.31.121.223:9092"],
+    brokers: [`${this.configService.get<string>('KAFKA_BROKER')}`],
   });
 
   private readonly consumers: Consumer[] = [];
