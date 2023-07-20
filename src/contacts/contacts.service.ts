@@ -21,12 +21,17 @@ export class ContactsService {
   async create(contactDto: CreateContactDto, payload: Payload) {
     const contact = this.repo.create(contactDto);
     const userId = payload.sub;
-
+  
     const user = await this.userService.findOneUser(userId);
-
+  
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
     contact.user = user;
     return this.repo.save(contact);
   }
+  
 
   async findContact(payload: Payload, query?: any): Promise<Contact[] | Contact> {
     //buat cegah query yang aneh2
