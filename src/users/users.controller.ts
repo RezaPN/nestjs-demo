@@ -36,8 +36,6 @@ export class UsersController {
   @Post('/refreshToken')
   async refreshToken(@Req() request: Request) {
     const result = await this.authService.getNewJwtToken(jwtRequestExtract(request));
-    console.log('line 39')
-    console.log(request)
     return result
   }
 
@@ -59,7 +57,6 @@ export class UsersController {
   @Post('/signin')
   async signin(@Body() body: CreateUserDto) {
     const user = await this.authService.signin(body.email, body.password);
-    console.log(user);
 
     return {message: 'Login Berhasil', result: user};
   }
@@ -74,8 +71,6 @@ export class UsersController {
       throw new NotFoundException('user not found');
     }
 
-    console.log(user)
-
     return {message: 'Pencarian berhasil!', result: user};;
   }
 
@@ -86,10 +81,12 @@ export class UsersController {
     return this.usersService.findUser(email);
   }
 
+  @Serialize(findUserDto)
   @Delete('/:id')
   @UseGuards(AdminGuard)
-  removeUser(@Param('id') id: string) {
-    return this.usersService.remove(parseInt(id));
+  async removeUser(@Param('id') id: string) {
+    const result = await this.usersService.remove(parseInt(id));
+    return {message: 'User berhasil diremove', result: result};
   }
 
   @Patch('/:id')

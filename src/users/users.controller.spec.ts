@@ -7,6 +7,8 @@ import { CanActivate, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
+import { CreateUserDto } from './dtos/create-user.dto';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 class MockAuthGuard implements CanActivate {
   canActivate() {
@@ -117,35 +119,149 @@ describe('UsersController', () => {
   });
 
   it('signout success using token', async () => {
-
     const mockResult = {
-        status: 200,
-        message:
-          'Sign out successful. You have been logged out of your account.',
-        data: null,
-      }
+      status: 200,
+      message: 'Sign out successful. You have been logged out of your account.',
+      data: null,
+    };
 
     const result = await controller.signOut('fakeToken');
     expect(result).toEqual(mockResult);
   });
 
-  //   it('findUser returns a single user with the given id', async () => {
-  //     const user = await controller.findUser('1');
-  //     expect(user).toBeDefined();
-  //   });
+  describe('createUser', () => {
+    it('creates a new user and returns a success message', async () => {
+      const dto = new CreateUserDto();
+      dto.email = 'test@test.com';
+      dto.password = 'testPassword';
 
-  //   it('findUser throws an error if user with given id is not found', async () => {
-  //     fakeUsersService.findOne = () => null; //overwrite existing fake service
-  //     expect(controller.findUser('1')).rejects.toThrow(NotFoundException);
-  //   });
+      const userResult = {
+        id: 1,
+        email: dto.email,
+        // Include other user properties as necessary...
+      };
 
-  //   it('signIn updates session object and returns user', async () => {
-  //     const session = {userId: -10};
-  //     const user = await controller.signin(
-  //       { email: 'rezapratamanu@gmail.com', password: 'mockPassword' },
-  //     );
+      fakeAuthService.signup = jest.fn().mockResolvedValue(userResult);
 
-  //     expect(user.id).toEqual(1);
-  //     expect(session.userId).toEqual(1);
-  //   });
+      const result = await controller.createUser(dto);
+      expect(result).toEqual({
+        message: 'Pendaftaran Berhasil',
+        result: userResult,
+      });
+      expect(fakeAuthService.signup).toHaveBeenCalledWith(
+        dto.email,
+        dto.password,
+      );
+    });
+  });
+
+  describe('signin', () => {
+    it('authenticates a user and returns a success message', async () => {
+      const dto = new CreateUserDto();
+      dto.email = 'test@test.com';
+      dto.password = 'testPassword';
+
+      const signinResult = {
+        id: 1,
+        email: dto.email,
+        access_token: 'fake_access_token',
+        refresh_token: 'fake_refresh_token',
+      };
+
+      fakeAuthService.signin = jest.fn().mockResolvedValue(signinResult);
+
+      const result = await controller.signin(dto);
+      expect(result).toEqual({
+        message: 'Login Berhasil',
+        result: signinResult,
+      });
+      expect(fakeAuthService.signin).toHaveBeenCalledWith(
+        dto.email,
+        dto.password,
+      );
+    });
+  });
+
+  describe('findUser', () => {
+    it('finds a user by id and returns a success message', async () => {
+      const userId = '1';
+      const userResult = {
+        id: parseInt(userId),
+        email: 'test@test.com',
+      };
+
+      fakeUsersService.findOneUser = jest.fn().mockResolvedValue(userResult);
+
+      const result = await controller.findUser(userId);
+      expect(result).toEqual({
+        message: 'Pencarian berhasil!',
+        result: userResult,
+      });
+      expect(fakeUsersService.findOneUser).toHaveBeenCalledWith(
+        parseInt(userId),
+      );
+    });
+
+    it('throws an error when user is not found', async () => {
+      const userId = '1';
+
+      fakeUsersService.findOneUser = jest.fn().mockResolvedValue(null);
+
+      await expect(controller.findUser(userId)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(fakeUsersService.findOneUser).toHaveBeenCalledWith(
+        parseInt(userId),
+      );
+    });
+  });
+
+  describe('findAllUsers', () => {
+    it('finds all users by email and returns them', async () => {
+      const userEmail = 'test@test.com';
+      const usersResult = [];
+
+      fakeUsersService.findUser = jest.fn().mockResolvedValue(usersResult);
+
+      const result = await controller.findAllUsers(userEmail);
+      expect(result).toEqual(usersResult);
+      expect(fakeUsersService.findUser).toHaveBeenCalledWith(userEmail);
+    });
+  });
+
+  describe('removeUser', () => {
+    it('removes a user by id', async () => {
+      const userId = '1';
+      const mockResult = {
+        id: 1,
+        email: 'fake-email',
+      };
+      const removeResult = {message: 'User berhasil diremove', result: mockResult}
+
+      fakeUsersService.remove = jest.fn().mockResolvedValue(mockResult);
+
+      const result = await controller.removeUser(userId);
+      expect(result).toEqual(removeResult);
+      expect(fakeUsersService.remove).toHaveBeenCalledWith(parseInt(userId));
+    });
+  });
+
+  describe('updateUser', () => {
+    it('updates a user by id and returns the updated user', async () => {
+      const userId = '1';
+      const updateData = new UpdateUserDto;
+      updateData.email = 'rezapn@gmail.com'
+      const updatedUserResult = {
+        id: parseInt(userId),
+        // Include other user properties as necessary...
+        ...updateData
+      };
+
+      fakeUsersService.update = jest.fn().mockResolvedValue(updatedUserResult);
+
+      const result = await controller.updateUser(userId, updateData);
+      expect(result).toEqual(updatedUserResult);
+      expect(fakeUsersService.update).toHaveBeenCalledWith(parseInt(userId), updateData);
+    });
+  });
 });
