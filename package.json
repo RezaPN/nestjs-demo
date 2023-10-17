@@ -48,7 +48,7 @@
     "rxjs": "^7.2.0",
     "sqlite3": "^5.1.6",
     "typeorm": "^0.3.16",
-    "xlsx-prototype-pollution-fixed": "^0.19.3"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
