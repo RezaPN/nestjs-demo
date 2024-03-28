@@ -33,7 +33,7 @@
     "@nestjs/core": "^8.0.0",
     "@nestjs/jwt": "^8.0.0",
     "@nestjs/passport": "^8.0.0",
-    "@nestjs/platform-express": "^8.0.0",
+    "@nestjs/platform-express": "^10.3.6",
     "@nestjs/typeorm": "^8.0.0",
     "@types/cookie-session": "^2.0.44",
     "axios": "^1.6.0",
